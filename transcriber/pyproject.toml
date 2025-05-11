@@ -1,0 +1,13 @@
+[project]
+name = "speakit_transcriber"
+version = "0.1.0"
+description = "Python backend for SpeakIt speech-to-text using faster-whisper."
+requires-python = ">=3.8"  # faster-whisper itself requires Python 3.8+
+dependencies = [
+    "faster-whisper==1.1.1"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]  # Standard build system requirement
+build-backend = "setuptools.build_meta"
+backend-path = "."  # Specifies that build backend is in current directory

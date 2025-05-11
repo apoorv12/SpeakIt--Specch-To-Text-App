@@ -1,0 +1,55 @@
+{
+  "name": "speakit",
+  "version": "1.0.0",
+  "description": "Speech-to-text application for macOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "speech",
+    "transcription",
+    "accessibility"
+  ],
+  "author": "Apoorv Khandelwal",
+  "license": "ISC",
+  "packageManager": "pnpm@10.5.2",
+  "dependencies": {
+    "mic": "^2.1.1"
+  },
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "electron"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^36.2.0",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.apoorvkhandelwal.speakit",
+    "productName": "SpeakIt",
+    "icon": "assets/app.icns",
+    "files": [
+      "**/*",
+      "!.venv/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "transcriber",
+        "to": "transcriber",
+        "filter": ["**/*", "!__pycache__"]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "hardenedRuntime": true,
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "This app needs to interact with other applications to paste transcribed text and identify the previously active application."
+      }
+    }
+  }
+}
