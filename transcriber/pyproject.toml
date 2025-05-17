@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Python backend for SpeakIt speech-to-text using faster-whisper."
 requires-python = ">=3.8"  # faster-whisper itself requires Python 3.8+
 dependencies = [
-    "faster-whisper==1.1.1"
+    "faster-whisper==1.1.1",
+    "ctranslate2==4.6.0", 
+    "transformers[torch]==4.51.3"
+
 ]
 
 [build-system]

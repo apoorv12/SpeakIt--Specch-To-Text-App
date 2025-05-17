@@ -36,7 +36,7 @@ let previousApp = null;
 function createWindow() {
     // Get the screen dimensions for proper positioning
     const { width, height } = screen.getPrimaryDisplay().workAreaSize;
-    
+
     win = new BrowserWindow({
         width: 300,
         height: 300,
@@ -56,19 +56,19 @@ function createWindow() {
     });
 
     win.loadFile('index.html');
-    
+
     // Hide window when it loses focus (unless in recording mode)
     win.on('blur', () => {
         if (!isRecording) {
             win.hide();
         }
     });
-    
+
     // Handle IPC messages from renderer
     ipcMain.on('hide-window', () => {
         win.hide();
     });
-    
+
     // Handle manual stop recording request
     ipcMain.on('stop-recording', () => {
         console.log('Manual stop recording requested');
@@ -84,7 +84,7 @@ function createWindow() {
             console.log('No recording in progress');
         }
     });
-    
+
     // Handle window errors
     win.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
         console.error('Window failed to load:', errorDescription);
@@ -103,7 +103,7 @@ app.whenReady().then(async () => {
 
     // Create the application window
     createWindow();
-    
+
     // Register global shortcut
     const registered = globalShortcut.register('Cmd+Shift+Space', () => {
         if (isRecording) {
@@ -128,7 +128,7 @@ app.whenReady().then(async () => {
             startRecording();
         }
     });
-    
+
     if (!registered) {
         console.error('Failed to register global shortcut');
     } else {
@@ -138,7 +138,7 @@ app.whenReady().then(async () => {
 function startRecording() {
     if (isRecording) return;
     console.log('Starting recording process...');
-    
+
     // Check microphone permission status
     try {
         const hasPermission = systemPreferences.getMediaAccessStatus('microphone');
@@ -146,13 +146,13 @@ function startRecording() {
     } catch (err) {
         console.error('Error checking microphone permission:', err);
     }
-    
+
     isRecording = true;
-    
+
     try {
         console.log('Notifying renderer process...');
         win.webContents.send('recording-started');
-        
+
         console.log('Creating mic instance...');
         micInstance = mic({
             rate: '16000',
@@ -160,23 +160,23 @@ function startRecording() {
             fileType: 'wav'
         });
         console.log('Mic instance created successfully');
-        
+
         const filePath = getUserDataPath('audio.wav');
         console.log('Audio will be saved to:', filePath);
-        
+
         // Make sure the directory exists
         if (!fs.existsSync(path.dirname(filePath))) {
             console.log('Creating directory:', path.dirname(filePath));
             fs.mkdirSync(path.dirname(filePath), { recursive: true });
         }
-        
+
         // Set up error handlers for audio stream
         try {
             console.log('Getting audio stream...');
             const micInput = micInstance.getAudioStream();
             console.log('Audio stream obtained successfully');
             const output = fs.createWriteStream(filePath);
-            
+
             // Handle microphone errors
             micInput.on('error', (err) => {
                 console.error('Microphone Error:', err);
@@ -184,7 +184,7 @@ function startRecording() {
                 win.webContents.send('error', 'Microphone error');
                 clearRecordingState();
             });
-            
+
             // Handle file write errors
             output.on('error', (err) => {
                 console.error('File Write Error:', err);
@@ -192,7 +192,7 @@ function startRecording() {
                 win.webContents.send('error', 'File write error');
                 clearRecordingState();
             });
-            
+
             // Handle file close event
             output.on('close', () => {
                 console.log('Output file has been closed');
@@ -202,22 +202,22 @@ function startRecording() {
                     console.log('File size:', stats.size, 'bytes');
                 }
             });
-            
+
             // Handle microphone close event
             micInput.on('close', () => {
                 console.log('Microphone input has been closed');
             });
-            
+
             console.log('Setting up audio pipe...');
             // Pipe audio data to file
             micInput.pipe(output);
             console.log('Audio pipe setup complete');
-            
+
             // Start recording
             console.log('Starting mic instance...');
             micInstance.start();
             console.log('Recording started successfully');
-            
+
             // Set timeout to automatically stop recording after MAX_RECORDING_TIME
             recordingTimeout = setTimeout(() => {
                 if (isRecording) {
@@ -225,7 +225,7 @@ function startRecording() {
                     stopRecording();
                 }
             }, MAX_RECORDING_TIME * 1000);
-            
+
         } catch (err) {
             console.error('Error setting up audio stream:', err);
             win.webContents.send('error', 'Failed to access microphone');
@@ -250,7 +250,7 @@ function stopRecording() {
         console.log('Cannot stop recording - no active recording or mic instance');
         return;
     }
-    
+
     try {
         // Clear the automatic timeout if it exists
         if (recordingTimeout) {
@@ -258,15 +258,15 @@ function stopRecording() {
             clearTimeout(recordingTimeout);
             recordingTimeout = null;
         }
-        
+
         console.log('Attempting to stop microphone recording...');
         // Stop the microphone recording
         micInstance.stop();
         win.webContents.send('recording-stopped');
         console.log('Recording stopped');
-        
+
         const filePath = getUserDataPath('audio.wav');
-        
+
         // Process the audio file after a short delay to ensure it's written
         setTimeout(async () => {
             try {
@@ -305,7 +305,7 @@ async function transcribeAndPaste(audioFilePath) {
                 reject(new Error('Audio file does not exist'));
                 return;
             }
-            
+
             const stats = fs.statSync(audioFilePath);
             if (stats.size === 0) {
                 console.error('Audio file is empty');
@@ -313,60 +313,59 @@ async function transcribeAndPaste(audioFilePath) {
                 reject(new Error('Empty audio recording'));
                 return;
             }
-            
+
             // Run transcription using Python and the Parakeet model
             console.log('Transcribing audio...');
             
             // Use the full path to the Python interpreter
             const pythonScript = getResourcePath('transcriber/run.py');
-            const modelScript = `/opt/homebrew/bin/python3 "${pythonScript}" "${audioFilePath}"`;
+            const modelScript = `python3 "${pythonScript}" "${audioFilePath}"`;
+            console.log('Executing Python script:', modelScript); // Log the exact command
 
             // Use exec instead of execSync for better error handling
             exec(modelScript, (error, stdout, stderr) => {
-                // Log any stderr output regardless of success/failure
+                // Always log both stdout and stderr
+                console.log('Python stdout:', stdout);
                 if (stderr) {
-                    console.warn('Output from Python script (stderr):', stderr);
+                    console.warn('Python stderr:', stderr);
                 }
 
                 if (error) {
-                    console.error('Transcription failed:', error);
-                    if (stderr) {
-                        console.error('Python script error details:', stderr);
-                    }
+                    console.error('Transcription exec error:', error);
                     win.webContents.send('error', 'Transcription failed');
                     reject(error);
                     return;
                 }
-                
+
                 // Process successful transcription
                 const text = stdout.trim();
                 processTranscriptionResult(text);
                 resolve();
             });
-    } catch (err) {
-        console.error('Error in transcription process:', err);
-        win.webContents.send('error', 'Processing error');
-        reject(err);
-    }
+        } catch (err) {
+            console.error('Error in transcription process:', err);
+            win.webContents.send('error', 'Processing error');
+            reject(err);
+        }
     });
 }
 
 // Helper function to process the transcription result
 function processTranscriptionResult(text) {
     console.log('📝 Transcribed:', text);
-    
+
     if (!text) {
         console.warn('Transcription is empty');
         win.webContents.send('error', 'No speech detected');
         return;
     }
-    
+
     // Send transcription to renderer for display
     win.webContents.send('transcription-complete', text);
-    
+
     // Copy to clipboard
     clipboard.writeText(text);
-    
+
     // Paste using AppleScript (macOS specific) and handle window cleanup
     pasteTextToApp(text, previousApp)
         .then(() => {

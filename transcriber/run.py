@@ -31,11 +31,29 @@ def safe_transcribe(audio_path):
 
         # Load ASR model
         try:
-            print("Loading Whisper model...", file=sys.stderr)
-            model = WhisperModel("base", device="cpu", compute_type="int8")
+            # Determine the path to the bundled model
+            # __file__ is the path to the current script (run.py)
+            # os.path.dirname(__file__) is the directory containing run.py (transcriber/)
+            model_path = os.path.join(os.path.dirname(__file__), "whisper-base-ct2")
+            
+            print(f"Script location (__file__): {__file__}", file=sys.stderr)
+            print(f"Script directory: {os.path.dirname(__file__)}", file=sys.stderr)
+            print(f"Attempting to load model from calculated path: {model_path}", file=sys.stderr)
+            print(f"Does model_path exist? {os.path.exists(model_path)}", file=sys.stderr)
+            print(f"Is model_path a directory? {os.path.isdir(model_path)}", file=sys.stderr)
+            
+            if os.path.exists(model_path) and os.path.isdir(model_path):
+                print(f"Contents of model_path: {os.listdir(model_path)}", file=sys.stderr)
+                model_bin_path = os.path.join(model_path, "model.bin")
+                print(f"Does model.bin exist at {model_bin_path}? {os.path.exists(model_bin_path)}", file=sys.stderr)
+            
+            print(f"Current working directory: {os.getcwd()}", file=sys.stderr)
+            
+            print(f"Loading Whisper model from: {model_path}", file=sys.stderr)
+            model = WhisperModel(model_path, device="cpu", compute_type="int8")
             print("ASR model loaded successfully.", file=sys.stderr)
         except Exception as e:
-            print(f"Error loading ASR model: {e}")
+            print(f"Error loading ASR model from {model_path}: {e}") # Log the path on error
             traceback.print_exc(file=sys.stderr)
             return False
         

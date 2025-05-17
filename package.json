@@ -46,10 +46,12 @@
       "category": "public.app-category.productivity",
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist",
-      "hardenedRuntime": true,
       "extendInfo": {
         "NSAppleEventsUsageDescription": "This app needs to interact with other applications to paste transcribed text and identify the previously active application."
-      }
+      },
+      "identity": "MyLocalCert",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
     }
   }
 }
