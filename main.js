@@ -23,7 +23,7 @@ const getUserDataPath = (filename) => {
 };
 
 // Configuration
-const MAX_RECORDING_TIME = 180; // Maximum recording time in seconds (3 minutes)
+const MAX_RECORDING_TIME = 2700; // Maximum recording time in seconds (45 minutes)
 const AUTO_HIDE_DELAY = 3000; // Time in ms to auto-hide after transcription
 
 // Application state
@@ -323,7 +323,7 @@ async function transcribeAndPaste(audioFilePath) {
             console.log('Executing Python script:', modelScript); // Log the exact command
 
             // Use exec instead of execSync for better error handling
-            exec(modelScript, (error, stdout, stderr) => {
+            exec(modelScript, async (error, stdout, stderr) => {
                 // Always log both stdout and stderr
                 console.log('Python stdout:', stdout);
                 if (stderr) {
@@ -340,6 +340,15 @@ async function transcribeAndPaste(audioFilePath) {
                 // Process successful transcription
                 const text = stdout.trim();
                 processTranscriptionResult(text);
+
+                // Cleanup audio file after successful transcription
+                try {
+                    fs.unlinkSync(audioFilePath);
+                    console.log('Cleaned up audio file');
+                } catch (err) {
+                    console.warn('Failed to cleanup audio file:', err);
+                }
+
                 resolve();
             });
         } catch (err) {
